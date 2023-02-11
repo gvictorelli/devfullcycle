@@ -1,3 +1,4 @@
+import { EventEmitter } from 'stream';
 import { HttpService } from '@nestjs/axios';
 import { Inject, Injectable } from '@nestjs/common';
 import { lastValueFrom } from 'rxjs';
@@ -5,33 +6,32 @@ import { CreateListDto } from './dto/create-list.dto';
 import { UpdateListDto } from './dto/update-list.dto';
 import { List } from './entities/list.entity';
 import { ListGatewayInterface } from './gateways/list-gateway-interface';
+import { ListCreatedEvent } from './events/list-created.events';
 
 
 @Injectable()
 export class ListsService {
   
   constructor(
-    @Inject('ListGatewayInterface')
-    private listGateway: ListGatewayInterface,
-    private httpService: HttpService
+    @Inject('ListPersistenceGateway')
+    private listPersistenceGateway: ListGatewayInterface,
+    @Inject('EventEmitter')
+    private eventEmitter: EventEmitter
   ){ }
 
   async create(createListDto: CreateListDto) {
     const list = new List(createListDto.name)
-    await this.listGateway.create(list);
-    await lastValueFrom(this.httpService.post('lists', { 
-        name: list.name, 
-      }),
-    );
+    await this.listPersistenceGateway.create(list);
+    this.eventEmitter.emit('list.created', new ListCreatedEvent(list));
     return list;
   }
 
   findAll() {
-    return this.listGateway.findAll();
+    return this.listPersistenceGateway.findAll();
   }
 
   async findOne(id: number) {
-    const list =  await this.listGateway.findById(id);
+    const list =  await this.listPersistenceGateway.findById(id);
     if(!list){
       throw new Error('List not found')
     }
