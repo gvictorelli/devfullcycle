@@ -1,4 +1,6 @@
-FROM node:16.16-0-slim
+FROM node:16.16.0-slim
+
+RUN apt update && apt instlal -y procps
 
 USER node
 

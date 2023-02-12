@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ListModel } from './lists/entities/list.model';
 import { ListsModule } from './lists/lists.module';
+import { BullModule } from '@nestjs/bull';
 
 @Module({
   imports: [
@@ -16,6 +17,12 @@ import { ListsModule } from './lists/lists.module';
       host: ":memory:",
       autoLoadModels: true,
       models: [ListModel]
+    }),
+    BullModule.forRoot({
+      redis: {
+        host: 'redis',
+        port: 6379,
+      },
     })
   ],
   controllers: [AppController],
